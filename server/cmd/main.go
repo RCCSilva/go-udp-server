@@ -6,14 +6,15 @@ import (
 )
 
 func main() {
-	udpServer, err := NewUdpServer()
+	conns := NewConns()
+	udpServer, err := NewUdpServer(conns)
 	if err != nil {
 		log.Panicf("failed to start server: %v", err)
 	}
 
 	go udpServer.Listen()
 
-	httpServer := NewHttpServer()
+	httpServer := NewHttpServer(conns)
 
 	err = http.ListenAndServe(":5000", httpServer)
 

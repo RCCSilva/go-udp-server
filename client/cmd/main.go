@@ -10,17 +10,19 @@ func main() {
 	err := listener.Setup()
 
 	if err != nil {
-		log.Panicf("failed to setup listener: %v", err)
+		log.Fatalf("failed to setup listener: %v", err)
 	}
 
 	go listener.Listen()
 
 	auth := NewAuth()
-	token, err := auth.Authenticate(listener.port)
+	token, err := auth.Authenticate(listener.udpAddr.Port)
 
 	if err != nil {
 		log.Fatalf("failed to authenticate: %v", err)
 	}
+
+	//
 
 	client := NewClient(listener, token)
 

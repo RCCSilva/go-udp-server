@@ -8,14 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
+const tokenLength = 16
+
 type UdpServer struct {
-	conns map[string]string
 	conn  *net.UDPConn
+	conns *Conns
 }
 
-func NewUdpServer() (*UdpServer, error) {
-
-	conns := make(map[string]string)
+func NewUdpServer(conns *Conns) (*UdpServer, error) {
 
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{
 		Port: 3000,
@@ -39,20 +39,27 @@ func (s *UdpServer) Listen() {
 	for {
 		rlen, remote, err := s.conn.ReadFromUDP(message[:])
 
-		if rlen < 16 || err != nil {
+		if rlen < tokenLength || err != nil {
 			continue
 		}
 
-		token, err := uuid.FromBytes(message[:16])
+		token, err := uuid.FromBytes(message[:tokenLength])
 
 		if err != nil {
 			continue
 		}
 
-		data := strings.TrimSpace(string(message[16:rlen]))
+		isValid := s.conns.verifyToken(token)
+
+		if !isValid {
+			log.Printf("%s token is invalid\n", token)
+			continue
+		}
+
+		data := strings.TrimSpace(string(message[tokenLength:rlen]))
 
 		log.Printf("received \"%s\" from %s using token %s", data, remote, token)
 
-		broadcast(s.conns, data)
+		s.conns.broadcast(data)
 	}
 }

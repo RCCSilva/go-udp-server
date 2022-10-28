@@ -3,13 +3,15 @@ package main
 import (
 	"log"
 	"net"
-	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Listener struct {
-	port string
-	conn *net.UDPConn
+	udpAddr *net.UDPAddr
+	conn    *net.UDPConn
+	token   *uuid.UUID
 }
 
 func NewListener() *Listener {
@@ -19,15 +21,13 @@ func NewListener() *Listener {
 }
 
 func (l *Listener) Setup() error {
-	addr := &net.UDPAddr{
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{
 		IP: net.ParseIP("0.0.0.0"),
-	}
-	conn, err := net.ListenUDP("udp", addr)
+	})
 
-	rex := regexp.MustCompile(":(?P<port>\\d+)")
-	finds := rex.FindStringSubmatch(conn.LocalAddr().String())
+	addr, _ := net.ResolveUDPAddr("udp", conn.LocalAddr().String())
 
-	l.port = finds[1]
+	l.udpAddr = addr
 	l.conn = conn
 
 	return err

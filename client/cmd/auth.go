@@ -13,7 +13,7 @@ import (
 type Auth struct{}
 
 type authRequest struct {
-	Port string `json:"port"`
+	Port int `json:"port"`
 }
 
 type authResponse struct {
@@ -26,13 +26,20 @@ func NewAuth() *Auth {
 	return auth
 }
 
-func (a *Auth) Authenticate(port string) (*uuid.UUID, error) {
+const serverHost = "http://localhost:5000"
+const jsonContentType = "application/json"
+
+func (a *Auth) Authenticate(port int) (*uuid.UUID, error) {
 	jsonData, err := json.Marshal(authRequest{Port: port})
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Post("http://localhost:5000/authenticate", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(
+		fmt.Sprintf("%s/authenticate", serverHost),
+		jsonContentType,
+		bytes.NewBuffer(jsonData),
+	)
 
 	if err != nil {
 		return nil, err
